@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Todo</string>
+    <string name="login_action_label">Log in</string>
+    <string name="add_item_action_label">Add</string>
+    <string name="clear_checked_action_label">Clear Checked</string>
+    <string name="clear_all_action_label">Clear All</string>
+    <string name="edit_item_hint">Edit Item</string>
+    <string name="stitch_client_app_id">APP_ID</string>
+</resources>
