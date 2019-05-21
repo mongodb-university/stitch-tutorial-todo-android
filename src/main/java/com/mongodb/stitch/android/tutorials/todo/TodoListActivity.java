@@ -58,13 +58,19 @@ public class TodoListActivity extends AppCompatActivity {
 
         // TODO:
         // 1. Instantiate the Stitch client
-        // client =
+        client = Stitch.getDefaultAppClient();
 
         // 2. Instantiate a RemoteMongoClient
-        // final RemoteMongoClient mongoClient =
+        final RemoteMongoClient mongoClient = client.getServiceClient(
+                RemoteMongoClient.factory, "mongodb-atlas");
 
         // 3. Set up the items collection
-        // items =
+        items = mongoClient
+                .getDatabase(TodoItem.TODO_DATABASE)
+                .getCollection(TodoItem.TODO_ITEMS_COLLECTION, TodoItem.class)
+                .withCodecRegistry(CodecRegistries.fromRegistries(
+                        BsonUtils.DEFAULT_CODEC_REGISTRY,
+                        CodecRegistries.fromCodecs(TodoItem.codec)));
 
         // Set up recycler view for to-do items
         final RecyclerView todoRecyclerView = findViewById(R.id.rv_todo_items);
