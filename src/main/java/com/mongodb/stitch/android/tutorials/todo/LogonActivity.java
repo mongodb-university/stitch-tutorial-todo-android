@@ -36,11 +36,6 @@ public class LogonActivity extends AppCompatActivity {
         setContentView(R.layout.logon);
         enableAnonymousAuth();
 
-        // log out any lingering accounts
-        if (_googleApiClient != null && _googleApiClient.isConnected()){
-            _googleApiClient.disconnect();
-        }
-
         final String googleWebClientId = getString(R.string.google_web_client_id);
         enableGoogleAuth(googleWebClientId);
     }
@@ -63,35 +58,56 @@ public class LogonActivity extends AppCompatActivity {
                                     Toast.LENGTH_LONG).show();
                         }));
     }
-    
+
+
     private void enableGoogleAuth(String googleWebClientId) {
         // 1. Create a new GoogleSignInOptions object by calling build() on a
         //    new GoogleSignInOptions.Builder object.
-        //final GoogleSignInOptions gso =
-
+        final GoogleSignInOptions gso =
+                new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                        .requestServerAuthCode(googleWebClientId, true).build();
 
 
         // 2. Initialize the _googleApiClient
-        // _googleApiClient =
+        _googleApiClient = new GoogleApiClient.Builder(LogonActivity.this)
+                .enableAutoManage(LogonActivity.this, connectionResult ->
+                        Log.e("Stitch Auth", "Error connecting to google: " + connectionResult.getErrorMessage()))
+                .addApi(GOOGLE_SIGN_IN_API, gso)
+                .build();
 
         // 3. Create an onclick listener for the google_login_button
-        // findViewById(R.id.google_login_button).setOnClickListener(v -> {
+        findViewById(R.id.google_login_button).setOnClickListener(v -> {
+            if (!_googleApiClient.isConnected()) {
+                _googleApiClient.connect();
+            }
+            GoogleSignInClient mGoogleSignInClient =
+                    GoogleSignIn.getClient(LogonActivity.this, gso);
 
-        //});
+            Intent signInIntent = mGoogleSignInClient.getSignInIntent();
+            startActivityForResult(signInIntent, GOOGLE_SIGN_IN);
+        });
     }
 
     private void handleGoogleSignInResult(Task<GoogleSignInAccount> completedTask) {
         try {
             // 5. Create a GoogleSignInAccount from the task result.
-            // GoogleSignInAccount account
+            GoogleSignInAccount account = completedTask.getResult(ApiException.class);
 
             // 5a. Create a GoogleCredential from the account.
-            //final GoogleCredential googleCredential =
-
+            final GoogleCredential googleCredential =
+                    new GoogleCredential(account.getServerAuthCode());
 
             // 5b. Authenticate against Stitch. If the task is successful, set the result to
             //      Activity.RESULT_OK and end this activity, returning control to the TodoListActivity
-            // TodoListActivity.client.getAuth().loginWithCredential(
+            TodoListActivity.client.getAuth().loginWithCredential(googleCredential).addOnCompleteListener(
+                    task -> {
+                        if (task.isSuccessful()) {
+                            setResult(Activity.RESULT_OK);
+                            finish();
+                        } else {
+                            Log.e("Stitch Auth", "Error logging in with Google", task.getException());
+                        }
+                    });
 
         } catch (ApiException e) {
             Log.w("GOOGLE AUTH FAILURE", "signInResult:failed code=" + e.getStatusCode());
@@ -107,7 +123,7 @@ public class LogonActivity extends AppCompatActivity {
 
         // 4. Handle the result that Google sends back to us
         if (requestCode == GOOGLE_SIGN_IN) {
-           // Task<GoogleSignInAccount> task =
+            Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
             handleGoogleSignInResult(task);
             return;
         }
