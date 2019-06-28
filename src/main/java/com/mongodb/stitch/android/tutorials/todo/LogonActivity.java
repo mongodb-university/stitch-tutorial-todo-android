@@ -40,6 +40,11 @@ public class LogonActivity extends AppCompatActivity {
 
         // 5. Make sure that the current user is logged off whenever
         // the login activity is shown.
+        AccessToken accessToken = AccessToken.getCurrentAccessToken();
+        boolean isLoggedIn = accessToken != null && !accessToken.isExpired();
+        if (isLoggedIn) {
+            LoginManager.getInstance().logOut();
+        }
 
         enableFacebookAuth();
     }
@@ -66,7 +71,7 @@ public class LogonActivity extends AppCompatActivity {
     private void enableFacebookAuth() {
 
         // 1. Initialize the CallbackManager
-
+        _callbackManager = CallbackManager.Factory.create();
 
         // 2. Register the CallbackManager with the LoginManager instance
         LoginManager.getInstance().registerCallback(_callbackManager, new FacebookCallback<LoginResult>() {
@@ -75,7 +80,18 @@ public class LogonActivity extends AppCompatActivity {
 
                 // 3. On successful login, obtain the Facebook credential and
                 // pass it to Stitch via the loginWithCredential() method.
-
+                final FacebookCredential fbCredential =
+                        new FacebookCredential(AccessToken.getCurrentAccessToken().getToken());
+                TodoListActivity.client.getAuth()
+                        .loginWithCredential(fbCredential).addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        setResult(Activity.RESULT_OK);
+                        finish();
+                    } else {
+                        Log.e("Stitch Auth", "Error logging in with Facebook",
+                                task.getException());
+                    }
+                });
             }
 
             @Override
@@ -98,6 +114,6 @@ public class LogonActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
 
         // 4. Handle the result that Facebook returns to us
-
+        _callbackManager.onActivityResult(requestCode, resultCode, data);
     }
 }
