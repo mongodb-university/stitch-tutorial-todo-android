@@ -147,8 +147,8 @@ public class TodoListActivity extends AppCompatActivity {
     private void doLogin() {
         if (client.getAuth().getUser() != null && client.getAuth().getUser().isLoggedIn()) {
             userId = client.getAuth().getUser().getId();
-
             // TODO: Call the addWatchToCollection method here
+            addWatchToCollection();
 
             TextView tvId = findViewById(R.id.txt_user_id);
             tvId.setText("Logged in with ID \"" + userId + "\"");
@@ -160,9 +160,17 @@ public class TodoListActivity extends AppCompatActivity {
         }
     }
 
-
     private void addWatchToCollection() {
         // TODO: Add watchWithFilter() to the items collection
+
+        items.watchWithFilter(new BsonDocument("fullDocument.owner_id", new BsonString(userId)))
+                .addOnCompleteListener(this::onWatchEventComplete);
+
+        // NOTE: the following code will watch the entire items collection. Because of the rules
+        // we set up in the Stitch app, it will have the same behavior as the watchWithFilter above.
+
+        // items.watch().addOnCompleteListener(this::onWatchEventComplete);
+
     }
 
     private void showAddItemDialog() {
@@ -272,13 +280,20 @@ public class TodoListActivity extends AppCompatActivity {
         doLogin();
     }
 
-
     private void onWatchEventComplete(Task<AsyncChangeStream<TodoItem, ChangeEvent<TodoItem>>> task) {
         AsyncChangeStream<TodoItem, ChangeEvent<TodoItem>> changeStream = task.getResult();
         changeStream.addChangeEventListener((BsonValue documentId, ChangeEvent<TodoItem> event) -> {
 
             // TODO: Insert logic here to handle changes to the items collection
+            TodoItem d = event.getFullDocument();
 
+            runOnUiThread(() -> Toast.makeText(getApplicationContext(),
+                    "One of the todo items has been updated!" +
+                            event.getOperationType() + " to " +
+                            d.get_id(),
+                    Toast.LENGTH_LONG).show());
+
+            todoAdapter.refreshItemList(getItems());
         });
     }
 }
