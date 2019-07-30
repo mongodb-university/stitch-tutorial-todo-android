@@ -34,12 +34,19 @@ import android.widget.Toast;
 import com.google.android.gms.tasks.Task;
 import com.mongodb.stitch.android.core.Stitch;
 import com.mongodb.stitch.android.core.StitchAppClient;
+import com.mongodb.stitch.android.services.mongodb.remote.AsyncChangeStream;
 import com.mongodb.stitch.android.services.mongodb.remote.RemoteMongoClient;
 import com.mongodb.stitch.android.services.mongodb.remote.RemoteMongoCollection;
 import com.mongodb.stitch.core.internal.common.BsonUtils;
+import com.mongodb.stitch.core.services.mongodb.remote.ChangeEvent;
+
 import java.util.ArrayList;
 import java.util.List;
+
+import org.bson.BsonDocument;
 import org.bson.BsonObjectId;
+import org.bson.BsonString;
+import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.types.ObjectId;
@@ -140,6 +147,9 @@ public class TodoListActivity extends AppCompatActivity {
     private void doLogin() {
         if (client.getAuth().getUser() != null && client.getAuth().getUser().isLoggedIn()) {
             userId = client.getAuth().getUser().getId();
+
+            // TODO: Call the addWatchToCollection method here
+
             TextView tvId = findViewById(R.id.txt_user_id);
             tvId.setText("Logged in with ID \"" + userId + "\"");
             todoAdapter.refreshItemList(getItems());
@@ -148,6 +158,11 @@ public class TodoListActivity extends AppCompatActivity {
             Intent intent = new Intent(TodoListActivity.this, LogonActivity.class);
             startActivityForResult(intent, 111);
         }
+    }
+
+
+    private void addWatchToCollection() {
+        // TODO: Add watchWithFilter() to the items collection
     }
 
     private void showAddItemDialog() {
@@ -255,5 +270,15 @@ public class TodoListActivity extends AppCompatActivity {
             Toast.makeText(this.getApplicationContext(), "Error logging in. Check the app logs for details.", Toast.LENGTH_LONG).show();
         }
         doLogin();
+    }
+
+
+    private void onWatchEventComplete(Task<AsyncChangeStream<TodoItem, ChangeEvent<TodoItem>>> task) {
+        AsyncChangeStream<TodoItem, ChangeEvent<TodoItem>> changeStream = task.getResult();
+        changeStream.addChangeEventListener((BsonValue documentId, ChangeEvent<TodoItem> event) -> {
+
+            // TODO: Insert logic here to handle changes to the items collection
+
+        });
     }
 }
