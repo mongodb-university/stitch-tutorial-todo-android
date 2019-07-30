@@ -14,20 +14,30 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.tasks.Task;
-import com.mongodb.stitch.core.auth.providers.anonymous.AnonymousCredential;
 import com.mongodb.stitch.core.auth.providers.google.GoogleCredential;
 
 import static com.google.android.gms.auth.api.Auth.GOOGLE_SIGN_IN_API;
+
+import com.facebook.AccessToken;
+import com.facebook.CallbackManager;
+import com.facebook.FacebookCallback;
+import com.facebook.FacebookException;
+import com.facebook.login.LoginManager;
+import com.facebook.login.LoginResult;
+
+import com.mongodb.stitch.core.auth.providers.facebook.FacebookCredential;
 
 public class LogonActivity extends AppCompatActivity {
 
     private GoogleApiClient _googleApiClient;
     private static final int GOOGLE_SIGN_IN = 421;
 
+
+    private CallbackManager _callbackManager;
+
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.logon);
         setupLogin();
     }
@@ -37,6 +47,14 @@ public class LogonActivity extends AppCompatActivity {
         enableAnonymousAuth();
         final String googleWebClientId = getString(R.string.google_web_client_id);
         enableGoogleAuth(googleWebClientId);
+
+        AccessToken accessToken = AccessToken.getCurrentAccessToken();
+        boolean isLoggedIn = accessToken != null && !accessToken.isExpired();
+        if (isLoggedIn) {
+            LoginManager.getInstance().logOut();
+        }
+
+        enableFacebookAuth();
     }
 
     private void enableAnonymousAuth() {
@@ -106,6 +124,40 @@ public class LogonActivity extends AppCompatActivity {
         }
     }
 
+    private void enableFacebookAuth() {
+        _callbackManager = CallbackManager.Factory.create();
+
+        LoginManager.getInstance().registerCallback(_callbackManager, new FacebookCallback<LoginResult>() {
+            @Override
+            public void onSuccess(LoginResult loginResult) {
+                final FacebookCredential fbCredential =
+                        new FacebookCredential(AccessToken.getCurrentAccessToken().getToken());
+                TodoListActivity.client.getAuth()
+                        .loginWithCredential(fbCredential).addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        setResult(Activity.RESULT_OK);
+                        finish();
+                    } else {
+                        Log.e("Stitch Auth", "Error logging in with Facebook",
+                                task.getException());
+                    }
+                });
+            }
+
+            @Override
+            public void onCancel() {
+                Toast.makeText(LogonActivity.this, "Facebook logon was " +
+                        "cancelled.", Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void onError(final FacebookException exception) {
+                Toast.makeText(LogonActivity.this, "Failed to logon with " +
+                        "Facebook. Result: " + exception.toString(), Toast.LENGTH_LONG).show();
+
+            }
+        });
+    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -114,6 +166,8 @@ public class LogonActivity extends AppCompatActivity {
             Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
             handleGoogleSignInResult(task);
             return;
+        } else {
+            _callbackManager.onActivityResult(requestCode, resultCode, data);
         }
     }
 }

@@ -7,4 +7,6 @@
     <string name="edit_item_hint">Edit Item</string>
     <string name="stitch_client_app_id">APP_ID</string>
     <string name="google_web_client_id">GOOGLE_ID</string>
+    <string name="facebook_app_id">Facebook_App_ID</string>
+    <string name="fb_login_protocol_scheme">fb_login_protocol_scheme</string>
 </resources>

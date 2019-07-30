@@ -15,3 +15,5 @@ Use the `master` branch for the
 Use the `google-oauth` branch for the 
 [Google OAuth tutorial](https://docs.mongodb.com/stitch/tutorials/guides/todo-guide-google/).
 
+Use the `facebook-oauth` branch for the
+[Facebook OAuth tutorial](https://docs.mongodb.com/stitch/tutorials/guides/todo-guide-facebook/).

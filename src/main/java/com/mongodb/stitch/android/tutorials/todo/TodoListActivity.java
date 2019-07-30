@@ -69,12 +69,10 @@ public class TodoListActivity extends AppCompatActivity {
                         BsonUtils.DEFAULT_CODEC_REGISTRY,
                         CodecRegistries.fromCodecs(TodoItem.codec)));
 
-        // Set up recycler view for to-do items
         final RecyclerView todoRecyclerView = findViewById(R.id.rv_todo_items);
         final RecyclerView.LayoutManager todoLayoutManager = new LinearLayoutManager(this);
         todoRecyclerView.setLayoutManager(todoLayoutManager);
 
-        // Set up adapter
         todoAdapter = new TodoAdapter(
                 new ArrayList<>(),
                 new TodoAdapter.ItemUpdater() {
