@@ -30,6 +30,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 import com.google.android.gms.tasks.Task;
 import com.mongodb.stitch.android.core.Stitch;
 import com.mongodb.stitch.android.core.StitchAppClient;
@@ -56,15 +57,11 @@ public class TodoListActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_todo_list);
 
-        // TODO:
-        // 1. Instantiate the Stitch client
         client = Stitch.getDefaultAppClient();
 
-        // 2. Instantiate a RemoteMongoClient
         final RemoteMongoClient mongoClient = client.getServiceClient(
                 RemoteMongoClient.factory, "mongodb-atlas");
 
-        // 3. Set up the items collection
         items = mongoClient
                 .getDatabase(TodoItem.TODO_DATABASE)
                 .getCollection(TodoItem.TODO_ITEMS_COLLECTION, TodoItem.class)
@@ -256,5 +253,9 @@ public class TodoListActivity extends AppCompatActivity {
         if (resultCode == Activity.RESULT_OK && requestCode == 111) {
             doLogin();
         }
+        if (resultCode != Activity.RESULT_OK || requestCode != 111) {
+            Toast.makeText(this.getApplicationContext(), "Error logging in. Check the app logs for details.", Toast.LENGTH_LONG).show();
+        }
+        doLogin();
     }
 }
